@@ -41,7 +41,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
-	extern uint8_t contReb;
+	//extern uint8_t contReb;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -53,10 +53,10 @@
 /* USER CODE BEGIN 0 */
 
 
-	extern uint8_t modo;
-	extern uint32_t alarma;
-	extern uint32_t alarma_final;
-	extern uint8_t flag_prim_config;
+	//extern uint8_t modo;
+	//extern uint32_t alarma;
+	//extern uint32_t alarma_final;
+	//extern uint8_t flag_prim_config;
 
 
 /* USER CODE END 0 */

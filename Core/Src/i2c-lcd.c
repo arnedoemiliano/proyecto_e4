@@ -1,17 +1,52 @@
+/************************************************************************************************
+Copyright (c) 2023, Emiliano Arnedo <emiarnedo@gmail.com>
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+associated documentation files (the "Software"), to deal in the Software without restriction,
+including without limitation the rights to use, copy, modify, merge, publish, distribute,
+sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in all copies or substantial
+portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
+NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES
+OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+SPDX-License-Identifier: MIT
+*************************************************************************************************/
 
+
+/* === Headers files inclusions =============================================================== */
 
 #include "i2c-lcd.h"
 #include "string.h"
 #include "stdio.h"
-
-extern I2C_HandleTypeDef hi2c1;  // change your handler here accordingly
-
+/* === Macros definitions ====================================================================== */
 
 #define SLAVE_ADDRESS_LCD 0x4E // change this according to your setup
 
+/* === Private data type declarations ========================================================== */
 
-
+extern I2C_HandleTypeDef hi2c1;  // change your handler here accordingly
 extern uint8_t flag_clear;
+
+/* === Private variable declarations =========================================================== */
+
+/* === Private function declarations =========================================================== */
+
+void lcdSendCmd (char cmd);  // send command to the lcd
+
+void lcdSendData (char data);  // send data to the lcd
+
+
+
+/* === Public variable definitions ============================================================= */
+
+/* === Private variable definitions ============================================================ */
+
+/* === Private function implementation ========================================================= */
+
+/* === Public function implementation ========================================================== */
 
 void lcdSendCmd (char cmd)	//cmd=10111010
 {
@@ -41,15 +76,17 @@ void lcdSendData (char data)
 
 void lcdClear(void)		//Tiene una bandera de activacion
 {
-	if(flag_clear == 1){
-	lcdSendCmd (0x80);
-	for (int i=0; i<70; i++)
-	{
-		lcdSendData (' ');
+	//if (flag_clear == 1){
+		lcdSendCmd (0x80);
+		for (int i=0; i<70; i++)
+		{
+			lcdSendData (' ');
+		}
+	//}
+	//flag_clear=0;
 	}
-	}
-	flag_clear=0;
-}
+
+
 
 void lcdCursor(int row, int col)
 {
@@ -107,9 +144,9 @@ void floatToString (float number, char* floatString){
 	int limit=0;
 	int cnt=1;
 	char *p;
-	char cadena[16]={0};
+	char cadena[17]={0};
 
-	memset(floatString,0,16);
+	memset(floatString,0,17);
 
 
 	sprintf(cadena, "%.2f",number);
@@ -172,7 +209,7 @@ void displayPressure(char* stringPress){
 
 void displayAlarm(char* stringAlarm){		//Para mostrar la temperatura que se configura en el modo CONFIG_TEMP
 
-	char string1Line[16]="Temperatura max:";	//string de la primera linea	//ERA 8 ANTES
+	char string1Line[17]="Temperatura max:";	//string de la primera linea	//ERA 8 ANTES
 	char label[4]={0};
 	label[0]= 0xDF;	//simbolo de grados (°)
 	label[1]= 'C';
@@ -202,5 +239,9 @@ void displayInicioAlarm(char* stringAlarmFinal){
 
 
 }
+/* === End of documentation ==================================================================== */
+
+
+
 
 

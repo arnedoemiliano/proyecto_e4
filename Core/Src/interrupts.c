@@ -18,15 +18,21 @@
 /* === Headers files inclusions =============================================================== */
 
 #include "interrupts.h"
+#include "stm32f1xx_hal_tim.h"
+#include "stm32f1xx_hal_i2c.h"
+#include "loop.h"
 
 /* === Macros definitions ====================================================================== */
 
 /* === Private data type declarations ========================================================== */
 
 /* === Private variable declarations =========================================================== */
-I2C_HandleTypeDef hi2c1;
+
 /* === Private function declarations =========================================================== */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin);
+void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim);
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim);
+
 
 /* === Public variable definitions ============================================================= */
 
@@ -69,7 +75,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 			break;
 		}
 
-		flag_clear = 1;
+		act_flag = 1;
 	}
 
 	//   	Rutina boton SUBIR     		//Solo sirve para modificar la variable alarma.
@@ -80,7 +86,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 				alarma = 10.0;
 			}
 		}
-		flag_clear = 1;
+		act_flag = 1;
 	}
 
 	//Rutina boton BAJAR
@@ -91,23 +97,76 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 				alarma = 0;
 			}
 		}
-		flag_clear = 1;
+		act_flag = 1;
 	}
 
 	// Rutina boton CONFIG
 	if (GPIO_Pin == GPIO_PIN_3) {
 		modo = CONFIG_TEMP;
-		flag_clear = 1;
+		act_flag = 1;
 	}
 	contReb = 2000;
 }
 
+
+
 /* === Public function implementation ========================================================== */
-/**
- * @brief I2C1 Initialization Function
- * @param None
- * @retval None
- */
+
+void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
+
+	while (contReb > 1) {
+		contReb--;
+	}
+
+	if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1) {//Verifica que la interrupcion provenga del channel 1.
+
+		if (modo < CONFIG_TEMP) {
+			modo = INICIO;
+			//act_flag = 1;
+		} else if ((modo == CONFIG_TEMP) && (flag_prim_config == 0)) {
+			modo = INICIO;
+			//act_flag = 1;
+		} else if ((modo == CONFIG_TEMP) && (flag_prim_config == 1)) {
+			modo = INICIO_ALARM;
+			alarma = alarma_final;//Para no perder el valor de alarma que configure.
+
+		} else {
+			modo = INICIO_ALARM;
+
+		}
+
+		act_flag = 1;
+
+		ICValue = HAL_TIM_ReadCapturedValue(&htim3, TIM_CHANNEL_1);
+
+		if (ICValue != 0) {
+
+			ancho_pulso = HAL_TIM_ReadCapturedValue(&htim3, TIM_CHANNEL_2);
+
+		}
+
+	}
+
+	contReb = 2000;
+}
+
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+
+	if (htim == &htim2) {
+
+		flag_medicion = 1;//El timer me hace tomar mediciones cada cierto tiempo
+
+		if (flag_alarma == 1) {				//Toglea el led cada 0.5 segundos.
+			HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+		} else if (flag_alarma == 0
+				&& HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == 0) {	//Para que apague el led una sola vez y no tenga que estar entrando todo el tiempo.
+			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+		}
+
+	}
+}
+
 void MX_I2C1_Init(void) {
 
 	/* USER CODE BEGIN I2C1_Init 0 */
@@ -132,6 +191,105 @@ void MX_I2C1_Init(void) {
 	/* USER CODE BEGIN I2C1_Init 2 */
 
 	/* USER CODE END I2C1_Init 2 */
+
+}
+
+void MX_TIM2_Init(void) {
+
+	/* USER CODE BEGIN TIM2_Init 0 */
+
+	/* USER CODE END TIM2_Init 0 */
+
+	TIM_ClockConfigTypeDef sClockSourceConfig = { 0 };
+	TIM_MasterConfigTypeDef sMasterConfig = { 0 };
+
+	/* USER CODE BEGIN TIM2_Init 1 */
+
+	/* USER CODE END TIM2_Init 1 */
+	htim2.Instance = TIM2;
+	htim2.Init.Prescaler = 8000 - 1;
+	htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+	htim2.Init.Period = 500;
+	htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+	htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+	if (HAL_TIM_Base_Init(&htim2) != HAL_OK) {
+		Error_Handler();
+	}
+	sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+	if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK) {
+		Error_Handler();
+	}
+	sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+	sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+	if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig)
+			!= HAL_OK) {
+		Error_Handler();
+	}
+	/* USER CODE BEGIN TIM2_Init 2 */
+
+	/* USER CODE END TIM2_Init 2 */
+
+}
+
+void MX_TIM3_Init(void) {
+
+	/* USER CODE BEGIN TIM3_Init 0 */
+
+	/* USER CODE END TIM3_Init 0 */
+
+	TIM_ClockConfigTypeDef sClockSourceConfig = { 0 };
+	TIM_SlaveConfigTypeDef sSlaveConfig = { 0 };
+	TIM_IC_InitTypeDef sConfigIC = { 0 };
+	TIM_MasterConfigTypeDef sMasterConfig = { 0 };
+
+	/* USER CODE BEGIN TIM3_Init 1 */
+
+	/* USER CODE END TIM3_Init 1 */
+	htim3.Instance = TIM3;
+	htim3.Init.Prescaler = 8000 - 1;
+	htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
+	htim3.Init.Period = 65535;
+	htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+	htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+	if (HAL_TIM_Base_Init(&htim3) != HAL_OK) {
+		Error_Handler();
+	}
+	sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+	if (HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig) != HAL_OK) {
+		Error_Handler();
+	}
+	if (HAL_TIM_IC_Init(&htim3) != HAL_OK) {
+		Error_Handler();
+	}
+	sSlaveConfig.SlaveMode = TIM_SLAVEMODE_RESET;
+	sSlaveConfig.InputTrigger = TIM_TS_TI1FP1;
+	sSlaveConfig.TriggerPolarity = TIM_INPUTCHANNELPOLARITY_FALLING;
+	sSlaveConfig.TriggerPrescaler = TIM_ICPSC_DIV1;
+	sSlaveConfig.TriggerFilter = 0;
+	if (HAL_TIM_SlaveConfigSynchro(&htim3, &sSlaveConfig) != HAL_OK) {
+		Error_Handler();
+	}
+	sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_FALLING;
+	sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
+	sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
+	sConfigIC.ICFilter = 0;
+	if (HAL_TIM_IC_ConfigChannel(&htim3, &sConfigIC, TIM_CHANNEL_1) != HAL_OK) {
+		Error_Handler();
+	}
+	sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
+	sConfigIC.ICSelection = TIM_ICSELECTION_INDIRECTTI;
+	if (HAL_TIM_IC_ConfigChannel(&htim3, &sConfigIC, TIM_CHANNEL_2) != HAL_OK) {
+		Error_Handler();
+	}
+	sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+	sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+	if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig)
+			!= HAL_OK) {
+		Error_Handler();
+	}
+	/* USER CODE BEGIN TIM3_Init 2 */
+
+	/* USER CODE END TIM3_Init 2 */
 
 }
 /* === End of documentation ==================================================================== */

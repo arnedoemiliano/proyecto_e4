@@ -33,7 +33,7 @@ extern "C" {
 /* === Public data type declarations =========================================================== */
 
 /* === Public variable declarations ============================================================ */
-extern uint8_t modo;
+
 //extern float temp;
 //extern float press;
 extern float alarma;			//Valor de config de alarma inicial
@@ -47,13 +47,20 @@ extern uint8_t flag_medicion;	//Bandera que activa el timer, para que el main se
 extern uint8_t flag_clear;
 extern uint8_t act_flag;
 
-//extern uint32_t ICValue;
-//extern uint32_t Frequency;
-//extern float Duty;
-//extern uint32_t ancho_pulso;
+extern uint32_t ICValue;
+extern uint32_t Frequency;
+extern float Duty;
+extern uint32_t ancho_pulso;
+
+extern I2C_HandleTypeDef hi2c1;
+extern TIM_HandleTypeDef htim2;
+extern TIM_HandleTypeDef htim3;
+
 /* === Public function declarations ============================================================ */
 
 void MX_I2C1_Init(void);
+void MX_TIM2_Init(void);
+void MX_TIM3_Init(void);
 
 /* === End of documentation ==================================================================== */
 

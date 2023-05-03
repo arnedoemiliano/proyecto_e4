@@ -60,13 +60,7 @@ void Error_Handler(void);
 
 /* USER CODE BEGIN Private defines */
 
-#define INICIO 0
-#define VER_TEMP 1
-#define VER_PRES 2
-#define CONFIG_TEMP 3
-#define INICIO_ALARM 4
-#define VER_TEMP_ALARM 5
-#define VER_PRES_ALARM 6
+
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

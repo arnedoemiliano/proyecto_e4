@@ -1,22 +1,56 @@
+/************************************************************************************************
+Copyright (c) 2023, Emiliano Arnedo <emiarnedo@gmail.com>
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+associated documentation files (the "Software"), to deal in the Software without restriction,
+including without limitation the rights to use, copy, modify, merge, publish, distribute,
+sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in all copies or substantial
+portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
+NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES
+OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+SPDX-License-Identifier: MIT
+*************************************************************************************************/
 
+
+/* === Headers files inclusions =============================================================== */
+
+#include "bmp.h"
 #include "stm32f1xx_hal.h"
 #include "math.h"
+//#include "stm32f1xx_hal_tim.h"
+//#include "stm32f1xx_hal_i2c.h"
 
+/* === Macros definitions ====================================================================== */
 #define devAddRead 0xEE
 #define devAddWrite 0xEE
-extern I2C_HandleTypeDef hi2c1;
-//#define BMP180_I2C &hi2c1
+/* === Private data type declarations ========================================================== */
 
+/* === Private variable declarations =========================================================== */
 
-//variables globales (pueden ser usadas y cambiadas por cualquier funcion)
+/* === Private function declarations =========================================================== */
 
+void readCalibrationData(void);
+
+uint16_t getUncompensatedTemperature(void);
+
+uint32_t getUncompensatedPressure(char oss);
+
+/* === Public variable definitions ============================================================= */
+
+/* === Private variable definitions ============================================================ */
 short AC1,AC2,AC3=0x00;  //Todas de 16 bits
 unsigned short AC4,AC5,AC6=0x00;
 short B1,B2,MB,MC,MD=0x00;
 long X1, X2, X3, B3, B5, B6, P, T=0;
 unsigned long B4, B7=0;
 
+/* === Private function implementation ========================================================= */
 
+/* === Public function implementation ========================================================== */
 void readCalibrationData (void)
 {
 uint8_t calibData[21]={0};
@@ -109,7 +143,7 @@ float getPressure(char oss){
 	X2 = (-7357*P)/(pow(2,16));
 	P = P + (X1+X2+3791)/(pow(2,4));
 
-	return P;
+	return P/100.0;
 }
 
 void bmpInit (void){
@@ -118,6 +152,7 @@ void bmpInit (void){
 
 }
 
+/* === End of documentation ==================================================================== */
 
 
 
