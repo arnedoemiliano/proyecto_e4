@@ -68,6 +68,7 @@ void medirTempPres(void) {
 }
 
 /*	Solamente modifica las variables que mostrará verPantalla	*/
+/*
 void actualizarValores(void) {
 
 	switch (modo) {
@@ -94,6 +95,7 @@ void actualizarValores(void) {
 	}
 
 }
+*/
 
 /*	Debería tener un forma de que no se actualice hasta que no haya cambios en lo que hay que mostrar	*/
 void actualizarPantalla(void) {
@@ -108,7 +110,11 @@ void actualizarPantalla(void) {
 		break;
 	case VER_TEMP_ALARM:
 	case VER_TEMP:
+		//En el caso de la visualizacion de temp y pres en el display, la actualizacion de pantalla se da solo cuando se detectan
+		//cambios en el valor actual
+		floatToString(temp, str_temp);
 		if (strcmp(str_actual, str_temp)!=0) {
+
 			lcdClear();
 			lcdCursor(0, 0);
 			displayTemp(str_temp);//displayTemp toma el string que contiene el valor de temperatura, le agrega los labels y lo manda por pantalla.
@@ -118,7 +124,9 @@ void actualizarPantalla(void) {
 		break;
 	case VER_PRES_ALARM:
 	case VER_PRES:
+		floatToString(press, str_temp);
 		if (strcmp(str_actual, str_temp)!=0) {
+
 			lcdClear();
 			lcdCursor(0, 0);
 			displayPressure(str_temp);
@@ -126,7 +134,10 @@ void actualizarPantalla(void) {
 		}
 		break;
 	case CONFIG_TEMP:
+		//Para todos los demas modos, la actualizacion de pantalla se permite cuando la interrupcion externa correspondiente
+		//activa la bandera act_flag
 		if (act_flag == 1) {
+			floatToString(alarma, str_temp);
 			lcdClear();
 			lcdCursor(0, 0);
 			displayAlarm(str_temp);
@@ -135,6 +146,7 @@ void actualizarPantalla(void) {
 		break;
 	case INICIO_ALARM:
 		if (act_flag == 1) {
+			floatToString(alarma_final, str_temp);
 			lcdClear();
 			lcdCursor(0, 0);
 			displayInicioAlarm(str_temp);
@@ -176,7 +188,7 @@ void comprobarPulsacionLarga(void) {
 void loop(void) {
 
 	medirTempPres();
-	actualizarValores();
+	//actualizarValores();
 	actualizarPantalla();
 	comprobarAlarma();
 	comprobarPulsacionLarga();
