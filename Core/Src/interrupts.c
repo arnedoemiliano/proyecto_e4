@@ -17,17 +17,20 @@
 
 /* === Headers files inclusions =============================================================== */
 
+#include "loop.h"
 #include "interrupts.h"
 #include "stm32f1xx_hal_tim.h"
 #include "stm32f1xx_hal_i2c.h"
-#include "loop.h"
+#include "stm32f1xx.h"
 
 /* === Macros definitions ====================================================================== */
 
 /* === Private data type declarations ========================================================== */
 
 /* === Private variable declarations =========================================================== */
-
+uint16_t contReb=2000;
+uint32_t Frequency=0;
+float Duty=0;
 /* === Private function declarations =========================================================== */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin);
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim);
@@ -61,6 +64,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 		case CONFIG_TEMP:
 			modo = INICIO_ALARM;
 			alarma_final = alarma;
+			flag_prim_config = 1;
 			break;
 		case INICIO_ALARM:
 			modo = VER_TEMP_ALARM;

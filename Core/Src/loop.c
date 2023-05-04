@@ -23,6 +23,7 @@
 #include "i2c-lcd.h"
 #include "main.h"
 #include "string.h"
+#include "stm32f1xx.h"
 
 /* === Macros definitions ====================================================================== */
 
@@ -32,24 +33,20 @@
 float temp;
 float press;
 char str_temp[17]; //string que guarda el valor convertido a float de temp, pres y alarma.
+char str_actual[17] = "Sin alarma";
 /* === Private function declarations =========================================================== */
 
 /* === Public variable definitions ============================================================= */
 uint8_t modo=INICIO;
 float alarma_final=250.0;
 float alarma=0;
+uint8_t flag_prim_config = 0;
+uint8_t flag_alarma;
+uint8_t flag_medicion;
+uint32_t ICValue;
+uint32_t ancho_pulso;
+uint8_t act_flag=1;	//inicializada en 1
 
-
-
-
-
-extern uint8_t flag_alarma;
-extern uint8_t flag_medicion;
-extern uint8_t flag_clear;
-extern uint32_t ICValue;
-extern uint32_t ancho_pulso;
-char str_actual[17] = "Sin alarma";
-extern uint8_t act_flag;	//inicializada en 1
 /* === Private variable definitions ============================================================ */
 
 /* === Private function implementation ========================================================= */
@@ -180,6 +177,7 @@ void comprobarPulsacionLarga(void) {
 		act_flag = 1;
 		alarma = 0;
 		alarma_final = 250.0;
+		flag_prim_config=0;
 
 	}
 

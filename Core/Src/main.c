@@ -26,6 +26,7 @@
 #include "i2c-lcd.h"
 #include "loop.h"
 #include "interrupts.h"
+#include "stm32f1xx.h"
 
 /* USER CODE END Includes */
 
@@ -65,22 +66,6 @@ void MX_GPIO_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-
-uint8_t flag_prim_config = 0;//Me indica que ya hubo una primera configuracion de alarma. Puedo hacer back de CONFIG_TEMP a INICIO_ALARM
-uint8_t flag_alarma = 0;
-uint16_t contReb = 2000;
-uint8_t flag_medicion = 0;//Bandera que activa el timer, para que el main se comunique por i2c con el sensor y tome temp y pres.
-uint8_t flag_clear = 0;
-uint8_t act_flag = 1;
-
-/*----Variables para el timer 3 (PWM input)----*/
-
-uint32_t ICValue = 0;
-uint32_t Frequency = 0;
-float Duty = 0;
-uint32_t ancho_pulso = 0;
-
-/*---------------------------------------------*/
 
 /* USER CODE END 0 */
 
