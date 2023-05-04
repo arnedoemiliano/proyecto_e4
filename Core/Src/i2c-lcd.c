@@ -28,7 +28,7 @@ SPDX-License-Identifier: MIT
 /* === Private data type declarations ========================================================== */
 
 extern I2C_HandleTypeDef hi2c1;  // change your handler here accordingly
-//extern uint8_t flag_clear;
+
 
 /* === Private variable declarations =========================================================== */
 

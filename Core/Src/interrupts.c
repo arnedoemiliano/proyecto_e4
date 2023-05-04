@@ -59,12 +59,12 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 			break;
 		case VER_PRES:
 			modo = INICIO;
-			act_flag = 1;
+			act_flag = true;
 			break;
 		case CONFIG_TEMP:
 			modo = INICIO_ALARM;
 			alarma_final = alarma;
-			flag_prim_config = 1;
+			flag_prim_config = true;
 			break;
 		case INICIO_ALARM:
 			modo = VER_TEMP_ALARM;
@@ -101,13 +101,13 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 				alarma = 0;
 			}
 		}
-		act_flag = 1;
+		act_flag = true;
 	}
 
 	// Rutina boton CONFIG
 	if (GPIO_Pin == GPIO_PIN_3) {
 		modo = CONFIG_TEMP;
-		act_flag = 1;
+		act_flag = true;
 	}
 	contReb = 2000;
 }
@@ -127,10 +127,10 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
 		if (modo < CONFIG_TEMP) {
 			modo = INICIO;
 			//act_flag = 1;
-		} else if ((modo == CONFIG_TEMP) && (flag_prim_config == 0)) {
+		} else if ((modo == CONFIG_TEMP) && (flag_prim_config == false)) {
 			modo = INICIO;
 			//act_flag = 1;
-		} else if ((modo == CONFIG_TEMP) && (flag_prim_config == 1)) {
+		} else if ((modo == CONFIG_TEMP) && (flag_prim_config == true)) {
 			modo = INICIO_ALARM;
 			alarma = alarma_final;//Para no perder el valor de alarma que configure.
 
@@ -139,7 +139,7 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
 
 		}
 
-		act_flag = 1;
+		act_flag = true;
 
 		ICValue = HAL_TIM_ReadCapturedValue(&htim3, TIM_CHANNEL_1);
 
@@ -159,11 +159,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 
 	if (htim == &htim2) {
 
-		flag_medicion = 1;//El timer me hace tomar mediciones cada cierto tiempo
+		flag_medicion = true;//El timer me hace tomar mediciones cada cierto tiempo
 
-		if (flag_alarma == 1) {				//Toglea el led cada 0.5 segundos.
+		if (flag_alarma == true) {				//Toglea el led cada 0.5 segundos.
 			HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
-		} else if (flag_alarma == 0
+		} else if (flag_alarma == false
 				&& HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == 0) {	//Para que apague el led una sola vez y no tenga que estar entrando todo el tiempo.
 			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
 		}

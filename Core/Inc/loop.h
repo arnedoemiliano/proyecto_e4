@@ -20,6 +20,7 @@
 
 /* === Headers files inclusions ================================================================ */
 #include "stm32f1xx_hal.h"
+#include "stdbool.h"
 /* === Cabecera C++ ============================================================================ */
 
 #ifdef __cplusplus
@@ -43,12 +44,13 @@ extern "C" {
 extern uint8_t modo;	//variable que necesita loop.c e interrupts.c
 extern float alarma_final;
 extern float alarma;
-extern uint8_t flag_prim_config; //Me indica que ya hubo una primera configuracion de alarma. Puedo hacer back de CONFIG_TEMP a INICIO_ALARM
-extern uint8_t flag_alarma;
-extern uint8_t flag_medicion; //Bandera que activa el timer, para que el main se comunique por i2c con el sensor y tome temp y pres.
+extern bool flag_prim_config; //Me indica que ya hubo una primera configuracion de alarma. Puedo hacer back de CONFIG_TEMP a INICIO_ALARM
+extern bool flag_alarma;
+extern bool flag_medicion; //Bandera que activa el timer, para que el main se comunique por i2c con el sensor y tome temp y pres.
+extern bool act_flag;
 extern uint32_t ICValue;
 extern uint32_t ancho_pulso;
-extern uint8_t act_flag;
+
 
 /* === Public function declarations ============================================================ */
 

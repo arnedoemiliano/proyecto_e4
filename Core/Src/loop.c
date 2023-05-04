@@ -23,7 +23,7 @@
 #include "i2c-lcd.h"
 #include "main.h"
 #include "string.h"
-#include "stm32f1xx.h"
+
 
 /* === Macros definitions ====================================================================== */
 
@@ -40,12 +40,14 @@ char str_actual[17] = "Sin alarma";
 uint8_t modo=INICIO;
 float alarma_final=250.0;
 float alarma=0;
-uint8_t flag_prim_config = 0;
-uint8_t flag_alarma;
-uint8_t flag_medicion;
+
+bool flag_prim_config = false;
+bool flag_alarma= false;
+bool flag_medicion=false;
+bool act_flag=true;	//inicializada en 1
+
 uint32_t ICValue;
 uint32_t ancho_pulso;
-uint8_t act_flag=1;	//inicializada en 1
 
 /* === Private variable definitions ============================================================ */
 
@@ -53,12 +55,12 @@ uint8_t act_flag=1;	//inicializada en 1
 
 /* === Public function implementation ========================================================== */
 void medirTempPres(void) {
-	if (flag_medicion == 1) {
+	if (flag_medicion == true) {
 
 		temp = getTemperature();
 		press = getPressure(1);
 
-		flag_medicion = 0;
+		flag_medicion = false;
 
 	}
 
@@ -98,11 +100,11 @@ void actualizarValores(void) {
 void actualizarPantalla(void) {
 	switch (modo) {
 	case INICIO:
-		if (act_flag == 1) {
+		if (act_flag == true) {
 			lcdClear();
 			lcdCursor(0, 0);
 			lcdSendString("Sin alarma");
-			act_flag = 0;
+			act_flag = false;
 		}
 		break;
 	case VER_TEMP_ALARM:
@@ -133,21 +135,21 @@ void actualizarPantalla(void) {
 	case CONFIG_TEMP:
 		//Para todos los demas modos, la actualizacion de pantalla se permite cuando la interrupcion externa correspondiente
 		//activa la bandera act_flag
-		if (act_flag == 1) {
+		if (act_flag == true) {
 			floatToString(alarma, str_temp);
 			lcdClear();
 			lcdCursor(0, 0);
 			displayAlarm(str_temp);
-			act_flag = 0;
+			act_flag = false;
 		}
 		break;
 	case INICIO_ALARM:
-		if (act_flag == 1) {
+		if (act_flag == true) {
 			floatToString(alarma_final, str_temp);
 			lcdClear();
 			lcdCursor(0, 0);
 			displayInicioAlarm(str_temp);
-			act_flag = 0;
+			act_flag = false;
 		}
 		break;
 	default:
@@ -161,9 +163,9 @@ void comprobarAlarma(void) {
 
 	//Si se tiene que activar la alarma, se activa una bandera para que el timer toglee el led. Asi no uso HAL_delay en el programa principal
 	if (alarma_final < temp) {
-		flag_alarma = 1;
+		flag_alarma = true;
 	} else {
-		flag_alarma = 0;
+		flag_alarma = false;
 	}
 
 }
@@ -174,10 +176,10 @@ void comprobarPulsacionLarga(void) {
 		ancho_pulso = 0;
 		ICValue = 0;
 		modo = INICIO;
-		act_flag = 1;
+		act_flag = true;
 		alarma = 0;
 		alarma_final = 250.0;
-		flag_prim_config=0;
+		flag_prim_config=false;
 
 	}
 
