@@ -28,91 +28,38 @@
 /* === Private data type declarations ========================================================== */
 
 /* === Private variable declarations =========================================================== */
-uint16_t contReb=2000;
-uint32_t Frequency=0;
-float Duty=0;
+
+uint16_t contReb = 2000;
+uint32_t Frequency = 0;
+float Duty = 0;
+uint8_t boton = 0;
+bool flag_timer1 = true;
+
 /* === Private function declarations =========================================================== */
+
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin);
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim);
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim);
 
-
 /* === Public variable definitions ============================================================= */
+
+
 
 /* === Private variable definitions ============================================================ */
 
 /* === Private function implementation ========================================================= */
+
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 
-	while (contReb > 1) {
-		contReb--;
+	if (flag_timer1 == true) {
+		//MX_TIM1_Init();	//inicializo el contador para que solo trabaje cuando se presiona un boton.
+		boton = GPIO_Pin;//guardo que boton se presiono para que el timer ejecute la rutina adecuada.
+		HAL_TIM_Base_Start_IT(&htim1);	//activo el timer
 	}
+	__HAL_TIM_SET_COUNTER(&htim1, 0);	//reinicia la cuenta.
+	flag_timer1 = false;//desactivo la bandera para que no se esté inicializando el contador todo el tiempo
 
-	/*   	Rutina boton OK     */
-	if (GPIO_Pin == GPIO_PIN_5) {
-		switch (modo) {
-		case INICIO:
-			modo = VER_TEMP;
-			break;
-		case VER_TEMP:
-			modo = VER_PRES;
-			break;
-		case VER_PRES:
-			modo = INICIO;
-			act_flag = true;
-			break;
-		case CONFIG_TEMP:
-			modo = INICIO_ALARM;
-			alarma_final = alarma;
-			flag_prim_config = true;
-			break;
-		case INICIO_ALARM:
-			modo = VER_TEMP_ALARM;
-			break;
-		case VER_TEMP_ALARM:
-			modo = VER_PRES_ALARM;
-			break;
-		case VER_PRES_ALARM:
-			modo = INICIO_ALARM;
-			break;
-		default:
-			break;
-		}
-
-		act_flag = 1;
-	}
-
-	//   	Rutina boton SUBIR     		//Solo sirve para modificar la variable alarma.
-	if (GPIO_Pin == GPIO_PIN_2) {
-		if (modo == CONFIG_TEMP) {
-			alarma = alarma + 0.1;
-			if (alarma > 10.0) {
-				alarma = 10.0;
-			}
-		}
-		act_flag = 1;
-	}
-
-	//Rutina boton BAJAR
-	if (GPIO_Pin == GPIO_PIN_1) {
-		if (modo == CONFIG_TEMP) {
-			alarma = alarma - 0.1;
-			if (alarma < 0) {
-				alarma = 0;
-			}
-		}
-		act_flag = true;
-	}
-
-	// Rutina boton CONFIG
-	if (GPIO_Pin == GPIO_PIN_3) {
-		modo = CONFIG_TEMP;
-		act_flag = true;
-	}
-	contReb = 2000;
 }
-
-
 
 /* === Public function implementation ========================================================== */
 
@@ -122,7 +69,7 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
 		contReb--;
 	}
 
-	if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1) {//Verifica que la interrupcion provenga del channel 1.
+	if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1) { //Verifica que la interrupcion provenga del channel 1.
 
 		if (modo < CONFIG_TEMP) {
 			modo = INICIO;
@@ -132,7 +79,7 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
 			//act_flag = 1;
 		} else if ((modo == CONFIG_TEMP) && (flag_prim_config == true)) {
 			modo = INICIO_ALARM;
-			alarma = alarma_final;//Para no perder el valor de alarma que configure.
+			alarma = alarma_final; //Para no perder el valor de alarma que configure.
 
 		} else {
 			modo = INICIO_ALARM;
@@ -154,14 +101,82 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
 	contReb = 2000;
 }
 
-
+//El timer 2 (sin canal asociado) cuenta de a ms (clock de 8MHz con prescaler en 8000 => 0,001 s) y tiene un periodo de 500 => interrupcion cada 500ms
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+
+	if (htim == &htim1) {
+		//OK
+		if (boton == GPIO_PIN_5) {
+			switch (modo) {
+			case INICIO:
+				modo = VER_TEMP;
+				break;
+			case VER_TEMP:
+				modo = VER_PRES;
+				break;
+			case VER_PRES:
+				modo = INICIO;
+				act_flag = true;
+				break;
+			case CONFIG_TEMP:
+				modo = INICIO_ALARM;
+				alarma_final = alarma;
+				flag_prim_config = true;
+				break;
+			case INICIO_ALARM:
+				modo = VER_TEMP_ALARM;
+				break;
+			case VER_TEMP_ALARM:
+				modo = VER_PRES_ALARM;
+				break;
+			case VER_PRES_ALARM:
+				modo = INICIO_ALARM;
+				break;
+			default:
+				break;
+			}
+
+			act_flag = 1;
+		}
+		//SUBIR
+		else if (boton == GPIO_PIN_2) {
+			if (modo == CONFIG_TEMP) {
+				alarma = alarma + 0.1;
+				if (alarma > 10.0) {
+					alarma = 10.0;
+				}
+			}
+			act_flag = 1;
+		}
+		//BAJAR
+		else if (boton == GPIO_PIN_1) {
+			if (modo == CONFIG_TEMP) {
+				alarma = alarma - 0.1;
+				if (alarma < 0) {
+					alarma = 0;
+				}
+			}
+			act_flag = true;
+		}
+		//CONFIG
+		else if (boton == GPIO_PIN_3) {
+			modo = CONFIG_TEMP;
+			act_flag = true;
+		}
+
+		boton = 0;
+		flag_timer1 = true;	//vuelvo a habilitar el timer para cuando se vuelva a presionar un boton
+		HAL_TIM_Base_Stop(&htim1);
+
+	}
+
+
 
 	if (htim == &htim2) {
 
-		flag_medicion = true;//El timer me hace tomar mediciones cada cierto tiempo
+		flag_medicion = true; //El timer me hace tomar mediciones cada cierto tiempo
 
-		if (flag_alarma == true) {				//Toglea el led cada 0.5 segundos.
+		if (flag_alarma == true) {			//Toglea el led cada 0.5 segundos.
 			HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
 		} else if (flag_alarma == false
 				&& HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == 0) {	//Para que apague el led una sola vez y no tenga que estar entrando todo el tiempo.
@@ -195,6 +210,44 @@ void MX_I2C1_Init(void) {
 	/* USER CODE BEGIN I2C1_Init 2 */
 
 	/* USER CODE END I2C1_Init 2 */
+
+}
+
+void MX_TIM1_Init(void) {
+
+	/* USER CODE BEGIN TIM1_Init 0 */
+
+	/* USER CODE END TIM1_Init 0 */
+
+	TIM_ClockConfigTypeDef sClockSourceConfig = { 0 };
+	TIM_MasterConfigTypeDef sMasterConfig = { 0 };
+
+	/* USER CODE BEGIN TIM1_Init 1 */
+
+	/* USER CODE END TIM1_Init 1 */
+	htim1.Instance = TIM1;
+	htim1.Init.Prescaler = 8000 - 1;
+	htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
+	htim1.Init.Period = 120;
+	htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+	htim1.Init.RepetitionCounter = 0;
+	htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+	if (HAL_TIM_Base_Init(&htim1) != HAL_OK) {
+		Error_Handler();
+	}
+	sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+	if (HAL_TIM_ConfigClockSource(&htim1, &sClockSourceConfig) != HAL_OK) {
+		Error_Handler();
+	}
+	sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+	sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+	if (HAL_TIMEx_MasterConfigSynchronization(&htim1, &sMasterConfig)
+			!= HAL_OK) {
+		Error_Handler();
+	}
+	/* USER CODE BEGIN TIM1_Init 2 */
+
+	/* USER CODE END TIM1_Init 2 */
 
 }
 
@@ -296,5 +349,7 @@ void MX_TIM3_Init(void) {
 	/* USER CODE END TIM3_Init 2 */
 
 }
+
+
 /* === End of documentation ==================================================================== */
 

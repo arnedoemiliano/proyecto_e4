@@ -51,7 +51,6 @@ extern bool act_flag;
 extern uint32_t ICValue;
 extern uint32_t ancho_pulso;
 
-
 /* === Public function declarations ============================================================ */
 
 void loop(void);

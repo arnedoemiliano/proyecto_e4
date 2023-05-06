@@ -24,7 +24,6 @@
 #include "main.h"
 #include "string.h"
 
-
 /* === Macros definitions ====================================================================== */
 
 /* === Private data type declarations ========================================================== */
@@ -37,14 +36,14 @@ char str_actual[17] = "Sin alarma";
 /* === Private function declarations =========================================================== */
 
 /* === Public variable definitions ============================================================= */
-uint8_t modo=INICIO;
-float alarma_final=250.0;
-float alarma=0;
+uint8_t modo = INICIO;
+float alarma_final = 250.0;
+float alarma = 0;
 
 bool flag_prim_config = false;
-bool flag_alarma= false;
-bool flag_medicion=false;
-bool act_flag=true;	//inicializada en 1
+bool flag_alarma = false;
+bool flag_medicion = false;
+bool act_flag = true;	//inicializada en 1
 
 uint32_t ICValue;
 uint32_t ancho_pulso;
@@ -68,33 +67,33 @@ void medirTempPres(void) {
 
 /*	Solamente modifica las variables que mostrará verPantalla	*/
 /*
-void actualizarValores(void) {
+ void actualizarValores(void) {
 
-	switch (modo) {
-	case (INICIO):
+ switch (modo) {
+ case (INICIO):
 
-		//HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13,GPIO_PIN_RESET);
-		break;
-	case VER_TEMP:
-	case VER_TEMP_ALARM:
-		floatToString(temp, str_temp);//Ahora la string str_temp contiene el valor float de temp.
-		break;
-	case VER_PRES:
-	case VER_PRES_ALARM:
-		floatToString(press, str_temp);
-		break;
-	case CONFIG_TEMP:
-		floatToString(alarma, str_temp);
-		break;
-	case INICIO_ALARM:
-		floatToString(alarma_final, str_temp);
-		break;
-	default:
-		break;
-	}
+ //HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13,GPIO_PIN_RESET);
+ break;
+ case VER_TEMP:
+ case VER_TEMP_ALARM:
+ floatToString(temp, str_temp);//Ahora la string str_temp contiene el valor float de temp.
+ break;
+ case VER_PRES:
+ case VER_PRES_ALARM:
+ floatToString(press, str_temp);
+ break;
+ case CONFIG_TEMP:
+ floatToString(alarma, str_temp);
+ break;
+ case INICIO_ALARM:
+ floatToString(alarma_final, str_temp);
+ break;
+ default:
+ break;
+ }
 
-}
-*/
+ }
+ */
 
 /*	Debería tener un forma de que no se actualice hasta que no haya cambios en lo que hay que mostrar	*/
 void actualizarPantalla(void) {
@@ -112,24 +111,24 @@ void actualizarPantalla(void) {
 		//En el caso de la visualizacion de temp y pres en el display, la actualizacion de pantalla se da solo cuando se detectan
 		//cambios en el valor actual
 		floatToString(temp, str_temp);
-		if (strcmp(str_actual, str_temp)!=0) {
+		if (strcmp(str_actual, str_temp) != 0) {
 
 			lcdClear();
 			lcdCursor(0, 0);
 			displayTemp(str_temp);//displayTemp toma el string que contiene el valor de temperatura, le agrega los labels y lo manda por pantalla.
-			strncpy(str_actual, str_temp,17);
+			strncpy(str_actual, str_temp, 17);
 		}
 
 		break;
 	case VER_PRES_ALARM:
 	case VER_PRES:
 		floatToString(press, str_temp);
-		if (strcmp(str_actual, str_temp)!=0) {
+		if (strcmp(str_actual, str_temp) != 0) {
 
 			lcdClear();
 			lcdCursor(0, 0);
 			displayPressure(str_temp);
-			strncpy(str_actual, str_temp,17);
+			strncpy(str_actual, str_temp, 17);
 		}
 		break;
 	case CONFIG_TEMP:
@@ -179,9 +178,10 @@ void comprobarPulsacionLarga(void) {
 		act_flag = true;
 		alarma = 0;
 		alarma_final = 250.0;
-		flag_prim_config=false;
+		flag_prim_config = false;
 
 	}
+
 
 }
 
