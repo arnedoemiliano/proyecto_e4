@@ -87,16 +87,24 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
 		}
 
 		act_flag = true;
-
-		ICValue = HAL_TIM_ReadCapturedValue(&htim3, TIM_CHANNEL_1);
+		//Logica activo baja
+		//cuando hay un flanco de bajada (pulsacion) en ese momento el channel 1 captura el valor actual del timer.
+		ICValue = HAL_TIM_ReadCapturedValue(&htim3, TIM_CHANNEL_1);	//falling direct
 
 		if (ICValue != 0) {
 
-			ancho_pulso = HAL_TIM_ReadCapturedValue(&htim3, TIM_CHANNEL_2);
+			//el canal 2 está configurado para capturar el valor del contador en el momento en que se produce un evento
+			//de captura en el canal 1. En otras palabras, cuando el canal 1 detecta el flanco de bajada y captura el valor del contador,
+			//este valor se utiliza como una referencia para el canal 2. Luego, cuando se produce un evento de captura en el canal 2 (en este caso,
+			//un flanco de subida), se captura el valor actual del contador y se resta del valor de referencia previamente capturado del
+			//canal 1 para obtener la duración del pulso.
+
+			ancho_pulso = HAL_TIM_ReadCapturedValue(&htim3, TIM_CHANNEL_2); //rising indirect
+
 
 		}
 
-	}
+}
 
 	contReb = 2000;
 }
