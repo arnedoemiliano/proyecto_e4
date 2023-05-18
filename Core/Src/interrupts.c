@@ -43,8 +43,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim);
 
 /* === Public variable definitions ============================================================= */
 
-
-
 /* === Private variable definitions ============================================================ */
 
 /* === Private function implementation ========================================================= */
@@ -53,10 +51,10 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 
 	if (flag_timer1 == true) {
 		//MX_TIM1_Init();	//inicializo el contador para que solo trabaje cuando se presiona un boton.
-		boton = GPIO_Pin;//guardo que boton se presiono para que el timer ejecute la rutina adecuada.
+		boton = GPIO_Pin; //guardo que boton se presiono para que el timer ejecute la rutina adecuada.
 		HAL_TIM_Base_Start_IT(&htim1);	//activo el timer
 	}
-	__HAL_TIM_SET_COUNTER(&htim1, 0);	//reinicia la cuenta.
+	//__HAL_TIM_SET_COUNTER(&htim1, 0);	//reinicia la cuenta.
 	flag_timer1 = false;//desactivo la bandera para que no se esté inicializando el contador todo el tiempo
 
 }
@@ -69,7 +67,7 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
 		contReb--;
 	}
 
-	if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1) { //Verifica que la interrupcion provenga del channel 1.
+	if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1) { //Verifica que la interrupcion provenga del channel 1. (falling)
 
 		if (modo < CONFIG_TEMP) {
 			modo = INICIO;
@@ -89,23 +87,32 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
 		act_flag = true;
 		//Logica activo baja
 		//cuando hay un flanco de bajada (pulsacion) en ese momento el channel 1 captura el valor actual del timer.
-		ICValue = HAL_TIM_ReadCapturedValue(&htim3, TIM_CHANNEL_1);	//falling direct
+		//ICValue = HAL_TIM_ReadCapturedValue(&htim3, TIM_CHANNEL_1);	//falling direct
 
-		if (ICValue != 0) {
+	}
 
-			//el canal 2 está configurado para capturar el valor del contador en el momento en que se produce un evento
-			//de captura en el canal 1. En otras palabras, cuando el canal 1 detecta el flanco de bajada y captura el valor del contador,
-			//este valor se utiliza como una referencia para el canal 2. Luego, cuando se produce un evento de captura en el canal 2 (en este caso,
-			//un flanco de subida), se captura el valor actual del contador y se resta del valor de referencia previamente capturado del
-			//canal 1 para obtener la duración del pulso.
+	if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_2) {//viene por un rising edge (cuando suelto el boton)
 
-			ancho_pulso = HAL_TIM_ReadCapturedValue(&htim3, TIM_CHANNEL_2); //rising indirect
+		//el canal 2 está configurado para capturar el valor del contador en el momento en que se produce un evento
+		//de captura en el canal 1. En otras palabras, cuando el canal 1 detecta el flanco de bajada y captura el valor del contador,
+		//este valor se utiliza como una referencia para el canal 2. Luego, cuando se produce un evento de captura en el canal 2 (en este caso,
+		//un flanco de subida), se captura el valor actual del contador y se resta del valor de referencia previamente capturado del
+		//canal 1 para obtener la duración del pulso.
 
+		//ancho_pulso = HAL_TIM_ReadCapturedValue(&htim3, TIM_CHANNEL_2); //rising indirect
+
+		if (HAL_TIM_ReadCapturedValue(&htim3, TIM_CHANNEL_2) >= 3000) {
+			ancho_pulso = 0;
+			ICValue = 0;
+			modo = INICIO;
+			act_flag = true;
+			alarma = 0;
+			alarma_final = 250.0;
+			flag_prim_config = false;
 
 		}
 
-}
-
+	}
 	contReb = 2000;
 }
 
@@ -178,8 +185,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 
 	}
 
-
-
 	if (htim == &htim2) {
 
 		flag_medicion = true; //El timer me hace tomar mediciones cada cierto tiempo
@@ -193,171 +198,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 
 	}
 }
-
-void MX_I2C1_Init(void) {
-
-	/* USER CODE BEGIN I2C1_Init 0 */
-
-	/* USER CODE END I2C1_Init 0 */
-
-	/* USER CODE BEGIN I2C1_Init 1 */
-
-	/* USER CODE END I2C1_Init 1 */
-	hi2c1.Instance = I2C1;
-	hi2c1.Init.ClockSpeed = 100000;
-	hi2c1.Init.DutyCycle = I2C_DUTYCYCLE_2;
-	hi2c1.Init.OwnAddress1 = 0;
-	hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
-	hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
-	hi2c1.Init.OwnAddress2 = 0;
-	hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
-	hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
-	if (HAL_I2C_Init(&hi2c1) != HAL_OK) {
-		Error_Handler();
-	}
-	/* USER CODE BEGIN I2C1_Init 2 */
-
-	/* USER CODE END I2C1_Init 2 */
-
-}
-
-void MX_TIM1_Init(void) {
-
-	/* USER CODE BEGIN TIM1_Init 0 */
-
-	/* USER CODE END TIM1_Init 0 */
-
-	TIM_ClockConfigTypeDef sClockSourceConfig = { 0 };
-	TIM_MasterConfigTypeDef sMasterConfig = { 0 };
-
-	/* USER CODE BEGIN TIM1_Init 1 */
-
-	/* USER CODE END TIM1_Init 1 */
-	htim1.Instance = TIM1;
-	htim1.Init.Prescaler = 8000 - 1;
-	htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-	htim1.Init.Period = 120;
-	htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-	htim1.Init.RepetitionCounter = 0;
-	htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-	if (HAL_TIM_Base_Init(&htim1) != HAL_OK) {
-		Error_Handler();
-	}
-	sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-	if (HAL_TIM_ConfigClockSource(&htim1, &sClockSourceConfig) != HAL_OK) {
-		Error_Handler();
-	}
-	sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-	sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-	if (HAL_TIMEx_MasterConfigSynchronization(&htim1, &sMasterConfig)
-			!= HAL_OK) {
-		Error_Handler();
-	}
-	/* USER CODE BEGIN TIM1_Init 2 */
-
-	/* USER CODE END TIM1_Init 2 */
-
-}
-
-void MX_TIM2_Init(void) {
-
-	/* USER CODE BEGIN TIM2_Init 0 */
-
-	/* USER CODE END TIM2_Init 0 */
-
-	TIM_ClockConfigTypeDef sClockSourceConfig = { 0 };
-	TIM_MasterConfigTypeDef sMasterConfig = { 0 };
-
-	/* USER CODE BEGIN TIM2_Init 1 */
-
-	/* USER CODE END TIM2_Init 1 */
-	htim2.Instance = TIM2;
-	htim2.Init.Prescaler = 8000 - 1;
-	htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-	htim2.Init.Period = 500;
-	htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-	htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-	if (HAL_TIM_Base_Init(&htim2) != HAL_OK) {
-		Error_Handler();
-	}
-	sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-	if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK) {
-		Error_Handler();
-	}
-	sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-	sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-	if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig)
-			!= HAL_OK) {
-		Error_Handler();
-	}
-	/* USER CODE BEGIN TIM2_Init 2 */
-
-	/* USER CODE END TIM2_Init 2 */
-
-}
-
-void MX_TIM3_Init(void) {
-
-	/* USER CODE BEGIN TIM3_Init 0 */
-
-	/* USER CODE END TIM3_Init 0 */
-
-	TIM_ClockConfigTypeDef sClockSourceConfig = { 0 };
-	TIM_SlaveConfigTypeDef sSlaveConfig = { 0 };
-	TIM_IC_InitTypeDef sConfigIC = { 0 };
-	TIM_MasterConfigTypeDef sMasterConfig = { 0 };
-
-	/* USER CODE BEGIN TIM3_Init 1 */
-
-	/* USER CODE END TIM3_Init 1 */
-	htim3.Instance = TIM3;
-	htim3.Init.Prescaler = 8000 - 1;
-	htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-	htim3.Init.Period = 65535;
-	htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-	htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-	if (HAL_TIM_Base_Init(&htim3) != HAL_OK) {
-		Error_Handler();
-	}
-	sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-	if (HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig) != HAL_OK) {
-		Error_Handler();
-	}
-	if (HAL_TIM_IC_Init(&htim3) != HAL_OK) {
-		Error_Handler();
-	}
-	sSlaveConfig.SlaveMode = TIM_SLAVEMODE_RESET;
-	sSlaveConfig.InputTrigger = TIM_TS_TI1FP1;
-	sSlaveConfig.TriggerPolarity = TIM_INPUTCHANNELPOLARITY_FALLING;
-	sSlaveConfig.TriggerPrescaler = TIM_ICPSC_DIV1;
-	sSlaveConfig.TriggerFilter = 0;
-	if (HAL_TIM_SlaveConfigSynchro(&htim3, &sSlaveConfig) != HAL_OK) {
-		Error_Handler();
-	}
-	sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_FALLING;
-	sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
-	sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
-	sConfigIC.ICFilter = 0;
-	if (HAL_TIM_IC_ConfigChannel(&htim3, &sConfigIC, TIM_CHANNEL_1) != HAL_OK) {
-		Error_Handler();
-	}
-	sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
-	sConfigIC.ICSelection = TIM_ICSELECTION_INDIRECTTI;
-	if (HAL_TIM_IC_ConfigChannel(&htim3, &sConfigIC, TIM_CHANNEL_2) != HAL_OK) {
-		Error_Handler();
-	}
-	sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-	sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-	if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig)
-			!= HAL_OK) {
-		Error_Handler();
-	}
-	/* USER CODE BEGIN TIM3_Init 2 */
-
-	/* USER CODE END TIM3_Init 2 */
-
-}
-
 
 /* === End of documentation ==================================================================== */
 

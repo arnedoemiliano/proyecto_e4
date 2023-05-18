@@ -1,20 +1,6 @@
 # Electrónica IV: Proyecto final
 
-Sensor de temperatura y presion con alarma programable. Consta de un sensor bmp180 para tomar las muestras correspondientes, un display LCD para visualizar los datos y 5 pulsadores para programar el dispositivo.
-
-## Instalación
-
-1. Clonar el repositorio desde GitHub:
-
-    ```bash
-    git clone https://github.com/arnedoemiliano/proyecto_e4
-    ```
-2. Utilizar STM32CubeIde para generar el ejecutable '.elf'.
-
-
-## Modo de uso
-
-Actualizar
+Sensor de temperatura y presion con alarma programable utilizando el microcontrolador stm32f103c8t6. Consta de un sensor bmp180 para tomar las muestras correspondientes, un display LCD para visualizar los datos y 5 pulsadores para programar el dispositivo.
 
 
 ## Licencia

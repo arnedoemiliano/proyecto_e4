@@ -168,7 +168,7 @@ void comprobarAlarma(void) {
 	}
 
 }
-
+/*
 void comprobarPulsacionLarga(void) {
 
 	if (ancho_pulso >= 3000) {
@@ -184,14 +184,17 @@ void comprobarPulsacionLarga(void) {
 
 
 }
+*/
+
+
+
 
 void loop(void) {
 
 	medirTempPres();
-	//actualizarValores();
 	actualizarPantalla();
 	comprobarAlarma();
-	comprobarPulsacionLarga();
+	//comprobarPulsacionLarga();
 
 }
 
